@@ -1,0 +1,9 @@
+---
+  - role: robertdebock.bootstrap
+  - role: robertdebock.docker
+  - role: robertdebock.core_dependencies
+  - role: robertdebock.buildtools
+  - role: robertdebock.epel
+  - role: robertdebock.python_pip
+  - role: robertdebock.users
+  - role: robertdebock.software

@@ -1,0 +1,4 @@
+---
+users_user_list:
+  - name: minikube
+    groups: docker

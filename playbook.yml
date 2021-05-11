@@ -1,0 +1,71 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: create machines
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: apply terraform code
+      terraform:
+        project_path: ./terraform
+        state: present
+      register: terraform
+
+    - name: add minikubes to inventory
+      add_host:
+        name: "{{ item }}"
+      loop: "{{ terraform.outputs.minikubes.value }}"
+
+- name: setup minikubes
+  hosts: all
+  become: yes
+  gather_facts: no
+  remote_user: root
+
+  pre_tasks:
+    - name: pause
+      pause:
+        seconds: 60
+
+    - name: wait for the host to be available
+      wait_for:
+        port: 22
+
+  roles:
+    - role: robertdebock.bootstrap
+    - role: robertdebock.update
+    - role: robertdebock.core_dependencies
+    - role: robertdebock.buildtools
+    - role: robertdebock.epel
+    - role: robertdebock.python_pip
+    - role: robertdebock.docker
+    - role: robertdebock.software
+    - role: robertdebock.users
+
+  tasks:
+    - name: install minikube
+      apt:
+        deb: "https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb"
+        state: present
+
+    - name: download helm
+      unarchive:
+        src: "https://get.helm.sh/helm-v3.5.4-linux-amd64.tar.gz"
+        remote_src: yes
+        dest: /tmp
+      notify:
+        - install helm
+
+    - name: install kubectl
+      get_url:
+        url: "https://dl.k8s.io/release/v1.21.0/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: "0755"
+
+  handlers:
+    - name: install helm
+      copy:
+        src: /tmp/linux-amd64/helm
+        remote_src: yes
+        dest: /usr/local/bin/helm
+        mode: "0755"

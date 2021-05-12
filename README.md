@@ -1,4 +1,4 @@
-# Ansible playbook for SaltStack
+# Ansible playbook for Minikube
 
 ## Setup
 
